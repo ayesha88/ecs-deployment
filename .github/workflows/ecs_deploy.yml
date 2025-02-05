@@ -23,7 +23,7 @@ jobs:
       PROJECT_NAME: av-ecs-app
       ENVIRONMENT: ${{ github.event.inputs.environment }}
       AWS_REGION: us-east-1
-      CONTAINER_NAME = av-ecs-app
+      CONTAINER_NAME: av-ecs-app
 
     steps:
       - name: Checkout Code
