@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploy s3 bucket and dynamodb table.
+Parameters:
+  S3BucketName:
+    Description: Name of the s3 bucket.
+    Type: String
+    Default: av-ecs-app-state-bucket
+  DynamoDbTableName:
+    Description: Name of the dynamo db table.
+    Type: String
+    Default: av-ecs-app-tf-state-lock
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Description: Creating Amazon S3 bucket
+    Properties:
+      BucketName: !Ref S3BucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags: 
+        - Key: Project
+          Value: "av-ecs-app"
+  DynamoDbTable:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      AttributeDefinitions: 
+        - AttributeName: "LockID"
+          AttributeType: "S"
+      BillingMode: PAY_PER_REQUEST
+      KeySchema: 
+        - AttributeName: "LockID"
+          KeyType: "HASH"
+      TableName: !Ref DynamoDbTableName
+      Tags: 
+        - Key: Project
+          Value: "av-ecs-app"
+Outputs:
+  S3Bucket:
+    Description: Bucket created using this template.
+    Value: !Ref S3Bucket
+  DynamoDbTable:
+    Description: DynamoDbTable created using this template.
+    Value: !Ref DynamoDbTable
