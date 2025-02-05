@@ -9,11 +9,11 @@ on:
       environment:
         description: "Select Deployment Environment"
         required: true
-        default: "dev"
+        default: "prod"
         type: choice
         options:
-          - dev
           - stage
+          - prod
 
 jobs:
   deploy:
@@ -23,6 +23,7 @@ jobs:
       PROJECT_NAME: av-ecs-app
       ENVIRONMENT: ${{ github.event.inputs.environment }}
       AWS_REGION: us-east-1
+      CONTAINER_NAME = av-ecs-app
 
     steps:
       - name: Checkout Code
@@ -33,6 +34,7 @@ jobs:
           echo "ECS_CLUSTER=${{ env.ENVIRONMENT }}-${{ env.PROJECT_NAME }}-ecs" >> $GITHUB_ENV
           echo "ECS_SERVICE=${{ env.ENVIRONMENT }}-${{ env.PROJECT_NAME }}-ecs-service" >> $GITHUB_ENV
           echo "ECR_REPO=${{ env.ENVIRONMENT }}-${{ env.PROJECT_NAME }}-ecr" >> $GITHUB_ENV
+          echo "ECS_TASK_DEFINITION=${{ env.ENVIRONMENT }}-${{ env.PROJECT_NAME }}-task-definition" >> $GITHUB_ENV
 
       - name: Authenticate to AWS
         uses: aws-actions/configure-aws-credentials@v1
@@ -50,32 +52,28 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t $AWS_ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPO:latest .
-          docker push $AWS_ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPO:latest
+          docker build -t $AWS_ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPO:${{ github.sha }} .
+          docker push $AWS_ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPO:${{ github.sha }}
 
-      # - name: Update ECS Task Definition
-      #   run: |
-      #     jq --arg IMAGE_URI "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest" '.containerDefinitions[0].image = $IMAGE_URI' $TASK_DEFINITION > updated-task-definition.json
-      #     mv updated-task-definition.json $TASK_DEFINITION
+      - name: Download Task Definition
+        run: |
+          aws ecs describe-task-definition \
+          --task-definition $ECS_TASK_DEFINITION \
+          --query taskDefinition \
+          --region ${{ env.AWS_REGION }} > ../../task-definition.json
 
-      # - name: Register Updated Task Definition
-      #   id: register-task-def
-      #   run: |
-      #     TASK_REVISION=$(aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION | jq -r '.taskDefinition.taskDefinitionArn')
-      #     echo "TASK_REVISION=$TASK_REVISION" >> $GITHUB_ENV
-
-      # - name: Deploy to ECS
-      #   run: |
-      #     aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --task-definition $TASK_REVISION --force-new-deployment
-
-      # - name: Wait for Deployment Stabilization
-      #   run: sleep 30
-
-      # - name: Validate Deployment
-      #   run: |
-      #     RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $HEALTH_CHECK_URL)
-      #     if [ $RESPONSE -ne 200 ]; then
-      #       echo "Health check failed with status $RESPONSE"
-      #       exit 1
-      #     fi
-      #     echo "Deployment successful!"
+      - name: Update image in the Task Definition
+        id: update-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: $AWS_ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPO:${{ github.sha }}
+  
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          service: $ECS_SERVICE
+          cluster: $ECS_CLUSTER
+          task-definition: ${{ steps.update-task-def.outputs.task-definition }}
+          wait-for-service-stability: true

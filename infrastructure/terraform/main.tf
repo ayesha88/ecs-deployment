@@ -457,8 +457,15 @@ resource "aws_autoscaling_group" "ecs_autoscaling_group" {
   }
 }
 
+# Get acm cerificate for the domain
+data "aws_acm_certificate" "certificate" {
+  domain   = var.domain_name
+  types    = ["AMAZON_ISSUED"]
+  most_recent = true
+}
+
 # create application load balancer
-resource "aws_lb" "aws_application_load_balancer" {
+resource "aws_lb" "application_load_balancer" {
   load_balancer_type         = "application"
   security_groups            = [aws_security_group.load_balancer_sg.id]
   subnets                    = aws_subnet.public_subnet[*].id
@@ -466,6 +473,36 @@ resource "aws_lb" "aws_application_load_balancer" {
   tags = {
     Name  = "${var.env}-${var.project_name}-alb"
   }
+}
+
+resource "aws_lb_listener" "http_redirect_https_alb_listner" {
+  load_balancer_arn = aws_lb.application_load_balancer.arn
+  protocol          = "HTTP"
+  port              = 80
+
+  default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+
+}
+
+resource "aws_lb_listener" "https_alb_listener" {
+  load_balancer_arn = aws_lb.application_load_balancer.arn
+  protocol          = "HTTPS"
+  port              = 443
+  certificate_arn   = data.aws_acm_certificate.certificate.arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_alb_target_group.alb_target_group.arn
+  }
+
 }
 
 # create target group for ALB
@@ -478,7 +515,7 @@ resource "aws_alb_target_group" "alb_target_group" {
   health_check {
     enabled             = true
     protocol            = "HTTP"
-    path                = "/"
+    path                = "/health"
     healthy_threshold   = 2
     unhealthy_threshold = 3
     timeout             = 5
@@ -492,19 +529,6 @@ resource "aws_alb_target_group" "alb_target_group" {
 
   tags = {
     Name  = "${var.env}-${var.project_name}-alb-target-group"
-  }
-}
-
-# create a listener on port 80 with redirect action
-resource "aws_lb_listener" "alb_http_listener" {
-  load_balancer_arn = aws_lb.aws_application_load_balancer.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_alb_target_group.alb_target_group.arn
-
   }
 }
 
@@ -555,5 +579,23 @@ resource "aws_security_group" "ec2_sg" {
 
   tags = {
     Name  = "${var.env}-${var.project_name}-ec2-sg"
+  }
+}
+
+## Get route53 zone id for domain 
+data "aws_route53_zone" "domain_hosted_zone" {
+  name = var.domain_name
+}
+
+## Create a record to point to ALB
+resource "aws_route53_record" "hosted_zone_record" {
+  zone_id = data.aws_route53_zone.domain_hosted_zone.zone_id
+  name    = var.env == "prod" ? "${var.domain_name}" : "${var.env}.${var.domain_name}"
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.application_load_balancer.dns_name
+    zone_id                = aws_lb.application_load_balancer.zone_id
+    evaluate_target_health = true
   }
 }

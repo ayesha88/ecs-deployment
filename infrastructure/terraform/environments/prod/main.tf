@@ -6,7 +6,7 @@ terraform {
         bucket = "av-ecs-app-state-bucket"
         dynamodb_table = "av-ecs-app-tf-state-lock"
         region = "us-east-1"
-        key = "terraform/stack/us-east-1/dev/terraform.tfstate"
+        key = "terraform/stack/us-east-1/prod/terraform.tfstate"
     }
 }
 
