@@ -60,7 +60,12 @@ jobs:
           aws ecs describe-task-definition \
           --task-definition $ECS_TASK_DEFINITION \
           --query taskDefinition \
-          --region ${{ env.AWS_REGION }} > ../../task-definition.json
+          --region ${{ env.AWS_REGION }} > task-definition.json
+
+      - name: test
+        run: |
+          pwd
+          ls
 
       - name: Update image in the Task Definition
         id: update-task-def
