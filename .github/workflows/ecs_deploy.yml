@@ -29,9 +29,9 @@ jobs:
 
       - name: Set Environment Variables
         run: |
-          echo "ECS_CLUSTER=${{ env.ENVIRONMENT }}-${{ env.PROJECT_NAME }}" >> $GITHUB_ENV
-          echo "ECS_SERVICE=${{ env.ENVIRONMENT }}-${{ env.PROJECT_NAME }}" >> $GITHUB_ENV
-          echo "ECR_REPO=${{ env.ENVIRONMENT }}-${{ env.PROJECT_NAME }}" >> $GITHUB_ENV
+          echo "ECS_CLUSTER=${{ env.ENVIRONMENT }}-${{ env.PROJECT_NAME }}-ecs" >> $GITHUB_ENV
+          echo "ECS_SERVICE=${{ env.ENVIRONMENT }}-${{ env.PROJECT_NAME }}-ecs-service" >> $GITHUB_ENV
+          echo "ECR_REPO=${{ env.ENVIRONMENT }}-${{ env.PROJECT_NAME }}-ecr" >> $GITHUB_ENV
 
       - name: Authenticate to AWS
         uses: aws-actions/configure-aws-credentials@v1

@@ -110,7 +110,7 @@ resource "aws_route_table_association" "private_rt_association" {
 }
 
 resource "aws_ecr_repository" "ecr" {
-  name  = "${var.env}-${var.project_name}"
+  name  = "${var.env}-${var.project_name}-ecr"
 }
 
 ## Get most recent AMI for an ECS-optimized Amazon Linux 2 instance
@@ -138,7 +138,7 @@ data "aws_ami" "amazon_linux_2" {
 ## Launch template for all EC2 instances that are part of the ECS cluster
 
 resource "aws_launch_template" "ecs_launch_template" {
-  name                   = "${var.env}-${var.project_name}"
+  name                   = "${var.env}-${var.project_name}-launch-template"
   image_id               = data.aws_ami.amazon_linux_2.id
   instance_type          = var.instance_type
   user_data               = base64encode(templatefile("${path.module}/templates/user_data.sh", {
@@ -205,12 +205,12 @@ resource "aws_iam_role_policy_attachment" "ec2_ssm_instance_role_policy" {
 
 ## Creates an ECS Cluster
 resource "aws_ecs_cluster" "ecs_cluster" {
-  name = "${var.env}-${var.project_name}"
+  name = "${var.env}-${var.project_name}-ecs"
 }
 
 ## Creates ECS Service
 resource "aws_ecs_service" "ecs_service" {
-  name                               = "${var.env}-${var.project_name}"
+  name                               = "${var.env}-${var.project_name}-ecs-service"
   iam_role                           = aws_iam_role.ecs_service_role.arn
   cluster                            = aws_ecs_cluster.ecs_cluster.id
   task_definition                    = aws_ecs_task_definition.ecs_task_definition.arn
@@ -290,7 +290,7 @@ data "aws_iam_policy_document" "ecs_service_role_policy" {
 
 ## Creates ECS Task Definition
 resource "aws_ecs_task_definition" "ecs_task_definition" {
-  family             = "${var.env}-${var.project_name}"
+  family             = "${var.env}-${var.project_name}-task-definition"
   execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn      = aws_iam_role.ecs_task_iam_role.arn
 
@@ -354,7 +354,7 @@ resource "aws_iam_role" "ecs_task_iam_role" {
 
 ## Creates Capacity Provider linked with ASG and ECS Cluster
 resource "aws_ecs_capacity_provider" "ecs_capacity_provider" {
-  name  = "${var.env}-${var.project_name}"
+  name  = "${var.env}-${var.project_name}-ecs-capacity-provider"
 
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.ecs_autoscaling_group.arn
@@ -419,7 +419,7 @@ resource "aws_appautoscaling_policy" "ecs_memory_scaling_policy" {
 
 ## Creates an ASG linked with our main VPC
 resource "aws_autoscaling_group" "ecs_autoscaling_group" {
-  name                  = "${var.env}-${var.project_name}"
+  name                  = "${var.env}-${var.project_name}-asg"
   max_size              = var.autoscaling_max_size
   min_size              = var.autoscaling_min_size
   vpc_zone_identifier   = aws_subnet.private_subnet[*].id
@@ -464,7 +464,7 @@ resource "aws_lb" "aws_application_load_balancer" {
   subnets                    = aws_subnet.public_subnet[*].id
 
   tags = {
-    Name  = "${var.env}-${var.project_name}"
+    Name  = "${var.env}-${var.project_name}-alb"
   }
 }
 
@@ -491,7 +491,7 @@ resource "aws_alb_target_group" "alb_target_group" {
   }
 
   tags = {
-    Name  = "${var.env}-${var.project_name}"
+    Name  = "${var.env}-${var.project_name}-alb-target-group"
   }
 }
 
