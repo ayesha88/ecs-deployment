@@ -1,3 +1,17 @@
+# Table of Contents
+
+- [Access App URL](#access-app-url)
+- [Architecture Overview](#architecture-overview)
+- [Prerequisites to Setting Up Cluster](#prerequisites-to-setting-up-cluster-one-time-ops)
+- [AWS ECS Deployment & Terraform Infrastructure Pipeline](#aws-ecs-deployment--terraform-infrastructure-pipeline)
+  - [Terraform Infrastructure Pipeline](#terraform-infrastructure-pipeline)
+  - [Deployment Workflow](#deployment-workflow)
+- [Destroying Terraform Resources](#destroying-terraform-resources)
+
+# Access app url
+- Prod: https://autoverify-app.com/health
+- Stage: https://stage.autoverify-app.com/health (stack is not up)
+
 # Architecture Overview
 The infrastructure is designed to host a containerized application on AWS ECS (Elastic Container Service) using the EC2 launch type. It ensures high availability, security, and scalability by using VPC, ALB (Application Load Balancer), Autoscaling, IAM, Route53, and CloudWatch Logs.
 
@@ -39,8 +53,8 @@ The infrastructure is designed to host a containerized application on AWS ECS (E
 - **Route 53 (`aws_route53_record`)**: Creates a DNS record for ALB.
 - **ACM Certificate (`data.aws_acm_certificate`)**: Provides an SSL certificate.
 
-# Prerequisites to Setting Up Cluster
-- A registered domain name in AWS Route 53.
+# Prerequisites to Setting Up Cluster (one time ops)
+- A registered domain name in AWS Route 53. (domain used in this stack is autoverify-app.com)
 - An AWS Certificate Manager (ACM) certificate for the domain.
 - A CloudFormation stack for Terraform S3 state storage and DynamoDB lock table (`infrastructure/cloudformation/terraform-state-resources`).
 
