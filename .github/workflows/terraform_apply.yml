@@ -43,12 +43,6 @@ jobs:
       - name: Terraform Init
         run: terraform init
         working-directory: infrastructure/terraform/environments/${{ env.ENVIRONMENT }}
-
-      - name: Download Task Definition
-        working-directory: infrastructure/terraform/environments/${{ env.ENVIRONMENT }}
-        run: |
-          ls
-          pwd
         
       - name: Terraform Validate
         run: terraform validate
