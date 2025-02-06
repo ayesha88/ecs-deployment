@@ -1,9 +1,9 @@
 name: Deploy to AWS ECS
 
 on:
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       environment:
@@ -62,12 +62,6 @@ jobs:
           --query taskDefinition \
           --region ${{ env.AWS_REGION }} > task-definition.json
 
-      - name: test
-        run: |
-          pwd
-          ls
-          cat task-definition.json
-
       - name: Update image in the Task Definition
         id: update-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -76,12 +70,6 @@ jobs:
           container-name: ${{ env.CONTAINER_NAME }}
           image: $AWS_ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPO:${{ github.sha }}
 
-      - name: test
-        run: |
-          pwd
-          ls
-          cat task-definition.json
-  
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:

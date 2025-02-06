@@ -537,11 +537,19 @@ resource "aws_security_group" "load_balancer_sg" {
   description = "Allow incoming connections for load balancer"
   vpc_id      = aws_vpc.ecs_vpc.id
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow incoming HTTP connections"
+    description = "Allow incoming HTTP connections on port 80"
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow incoming HTTPS connections on port 443"
   }
   egress {
     from_port   = 0

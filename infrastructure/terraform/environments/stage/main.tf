@@ -36,8 +36,8 @@ module "main" {
     ecs_task_deployment_maximum_percent = 100 # Upper limit (as a percentage of the service's desiredCount) of the number of running tasks that can be running in a service during a deployment
     container_name = "av-ecs-app"
     container_port = 8000
-    ecs_task_cpu = 100  # Number of cpu units used by the task
-    memory = 200    # Amount (in MiB) of memory used by the task
+    ecs_task_cpu = 512  # Number of cpu units used by the task
+    memory = 512    # Amount (in MiB) of memory used by the task
     log_retention_in_days = 7
     ecs_task_max_count = 10 # maximum number of tasks that may run simultaneously
     ecs_task_min_count = 2  # minimum number of tasks that may run simultaneously

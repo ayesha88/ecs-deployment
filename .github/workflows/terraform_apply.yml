@@ -1,0 +1,61 @@
+name: Terraform Infrastructure Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Select Deployment Environment"
+        required: true
+        default: "prod"
+        type: choice
+        options:
+          - stage
+          - prod
+
+jobs:
+  terraform:
+    name: Terraform Deployment
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      ENVIRONMENT: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.6
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: infrastructure/terraform/environments/${{ env.ENVIRONMENT }}
+
+      - name: Terraform Format
+        run: terraform fmt -check
+        working-directory: infrastructure/terraform/environments/${{ env.ENVIRONMENT }}
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: infrastructure/terraform/environments/${{ env.ENVIRONMENT }}
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+        working-directory: infrastructure/terraform/environments/${{ env.ENVIRONMENT }}
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan
+        working-directory: infrastructure/terraform/environments/${{ env.ENVIRONMENT }}
