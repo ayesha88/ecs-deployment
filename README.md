@@ -9,8 +9,8 @@
 - [Destroying Terraform Resources](#destroying-terraform-resources)
 
 # Access app url
-- Prod: https://autoverify-app.com/health
-- Stage: https://stage.autoverify-app.com/health (stack is not up)
+- Prod (*Infrastructure is setup in us-east-1 region*) : https://autoverify-app.com/health
+- Stage (*Infrastructure is not setup*): https://stage.autoverify-app.com/health
 
 # Architecture Overview
 The infrastructure is designed to host a containerized application on AWS ECS (Elastic Container Service) using the EC2 launch type. It ensures high availability, security, and scalability by using VPC, ALB (Application Load Balancer), Autoscaling, IAM, Route53, and CloudWatch Logs.
