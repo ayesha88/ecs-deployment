@@ -33,3 +33,34 @@ The infrastructure is designed to host containerized application on AWS ECS (Ela
 - Route 53 (aws_route53_record): Creates a DNS record for ALB.
 - ACM Certificate (data.aws_acm_certificate): Provides an SSL certificate.
 
+
+
+# AWS ECS Deployment & Terraform Infrastructure Pipeline
+This repository contains GitHub Actions workflows for deploying a containerized application to AWS ECS and managing infrastructure using Terraform.
+
+## Deployment Workflow
+This workflow handles building, pushing, and deploying a Docker container to AWS ECS. 
+- Navigate to the Actions tab in GitHub.
+- Select Deploy to AWS ECS
+- Click Run workflow and choose the desired environment (stage or prod).
+- Wait for the workflow to complete.
+
+## Terraform Infrastructure Pipeline
+This workflow automates Terraform execution to provision and manage AWS infrastructure.
+- Navigate to the Actions tab in GitHub.
+- Select Terraform Infrastructure Pipeline
+- Click Run workflow and choose the desired environment (stage or prod).
+- Wait for the workflow to complete.
+
+## Destroying Terraform Resources
+To remove infrastructure managed by Terraform:
+- Configure [av-sandbox] aws profile in ~/.aws/credentials
+- Navigate to the appropriate environment directory:
+```
+cd infrastructure/terraform/environments/prod  # or stage
+```
+
+```
+terraform destroy
+```
+
