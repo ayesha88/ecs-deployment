@@ -621,7 +621,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu_alarm" {
   namespace                 = "AWS/ECS"
   period                    = 60
   statistic                 = "Average"
-  threshold                 = 60
+  threshold                 = 80
   alarm_description         = "Alarm when ECS Service CPU utilization exceeds threshold"
   insufficient_data_actions = []
 
@@ -642,7 +642,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_memory_alarm" {
   namespace                 = "AWS/ECS"
   period                    = 60
   statistic                 = "Average"
-  threshold                 = 60
+  threshold                 = 80
   alarm_description         = "Alarm when ECS Service memory utilization exceeds threshold"
   insufficient_data_actions = []
 

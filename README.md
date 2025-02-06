@@ -49,6 +49,10 @@ The infrastructure is designed to host a containerized application on AWS ECS (E
 - **CloudWatch Logs (`aws_cloudwatch_log_group`)**: Captures ECS logs.
 - **Auto Scaling Policies (`aws_appautoscaling_policy`)**: Adjusts ECS tasks based on CPU and memory utilization.
 
+## CloudWatch Alarms
+- **Alarm for CPU Utilization**: Triggers when CPU utilization exceeds 80% for 1 minute.
+- **Alarm for Memory Utilization**: Triggers when memory utilization exceeds 80% for 1 minute.
+
 ## Domain Name System (DNS) & SSL
 - **Route 53 (`aws_route53_record`)**: Creates a DNS record for ALB.
 - **ACM Certificate (`data.aws_acm_certificate`)**: Provides an SSL certificate.
