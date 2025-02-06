@@ -240,6 +240,10 @@ resource "aws_ecs_service" "ecs_service" {
   # lifecycle {
   #   ignore_changes = [desired_count]
   # }
+
+  lifecycle {
+    ignore_changes = [task_definition]
+  }
 }
 
 ## Create service-linked role used by the ECS Service to manage the ECS Cluster
@@ -606,4 +610,91 @@ resource "aws_route53_record" "hosted_zone_record" {
     zone_id                = aws_lb.application_load_balancer.zone_id
     evaluate_target_health = true
   }
+}
+
+# Create CloudWatch Alarm for ECS Service CPU Utilization
+resource "aws_cloudwatch_metric_alarm" "ecs_cpu_alarm" {
+  alarm_name                = "${var.env}-${var.project_name}-ecs-cpu-utilization-alarm"
+  comparison_operator       = "GreaterThanThreshold"
+  evaluation_periods        = 1
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/ECS"
+  period                    = 60
+  statistic                 = "Average"
+  threshold                 = 60
+  alarm_description         = "Alarm when ECS Service CPU utilization exceeds threshold"
+  insufficient_data_actions = []
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.ecs_cluster.name
+    ServiceName = aws_ecs_service.ecs_service.name
+  }
+
+  alarm_actions = [aws_sns_topic.alarm_topic.arn] # Optional: If you want to send notifications
+}
+
+# Create CloudWatch Alarm for ECS Service Memory Utilization
+resource "aws_cloudwatch_metric_alarm" "ecs_memory_alarm" {
+  alarm_name                = "${var.env}-${var.project_name}-ecs-memory-utilization-alarm"
+  comparison_operator       = "GreaterThanThreshold"
+  evaluation_periods        = 1
+  metric_name               = "MemoryUtilization"
+  namespace                 = "AWS/ECS"
+  period                    = 60
+  statistic                 = "Average"
+  threshold                 = 60
+  alarm_description         = "Alarm when ECS Service memory utilization exceeds threshold"
+  insufficient_data_actions = []
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.ecs_cluster.name
+    ServiceName = aws_ecs_service.ecs_service.name
+  }
+
+  alarm_actions = [aws_sns_topic.alarm_topic.arn] # Optional: If you want to send notifications
+}
+
+# Create CloudWatch Alarm for EC2 AutoScaling Group - Desired Capacity
+resource "aws_cloudwatch_metric_alarm" "asg_desired_capacity_alarm" {
+  alarm_name                = "${var.env}-${var.project_name}-asg-desired-capacity-alarm"
+  comparison_operator       = "LessThanThreshold"
+  evaluation_periods        = 1
+  metric_name               = "GroupDesiredCapacity"
+  namespace                 = "AWS/AutoScaling"
+  period                    = 300
+  statistic                 = "Average"
+  threshold                 = var.autoscaling_min_size
+  alarm_description         = "Alarm when AutoScaling group desired capacity falls below threshold"
+  insufficient_data_actions = []
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.ecs_autoscaling_group.name
+  }
+
+  alarm_actions = [aws_sns_topic.alarm_topic.arn] # Optional: If you want to send notifications
+}
+
+# Create CloudWatch Alarm for Application Load Balancer - 5XX Errors
+resource "aws_cloudwatch_metric_alarm" "alb_5xx_errors_alarm" {
+  alarm_name                = "${var.env}-${var.project_name}-alb-5xx-errors-alarm"
+  comparison_operator       = "GreaterThanThreshold"
+  evaluation_periods        = 1
+  metric_name               = "5XXCount"
+  namespace                 = "AWS/ApplicationELB"
+  period                    = 60
+  statistic                 = "Sum"
+  threshold                 = 10
+  alarm_description         = "Alarm when Application Load Balancer 5XX errors exceed threshold"
+  insufficient_data_actions = []
+
+  dimensions = {
+    LoadBalancer = aws_lb.application_load_balancer.name
+  }
+
+  alarm_actions = [aws_sns_topic.alarm_topic.arn] # Optional: If you want to send notifications
+}
+
+# Create SNS Topic for Alarm Notifications (Optional)
+resource "aws_sns_topic" "alarm_topic" {
+  name = "${var.env}-${var.project_name}-alarm-topic"
 }
