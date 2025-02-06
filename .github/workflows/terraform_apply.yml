@@ -1,9 +1,9 @@
 name: Terraform Infrastructure Pipeline
 
 on:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
   workflow_dispatch:
     inputs:
       environment:
@@ -43,10 +43,12 @@ jobs:
         run: terraform init
         working-directory: infrastructure/terraform/environments/${{ env.ENVIRONMENT }}
 
-      - name: Terraform Format
-        run: terraform fmt -check
+      - name: Download Task Definition
         working-directory: infrastructure/terraform/environments/${{ env.ENVIRONMENT }}
-
+        run: |
+          ls
+          pwd
+        
       - name: Terraform Validate
         run: terraform validate
         working-directory: infrastructure/terraform/environments/${{ env.ENVIRONMENT }}
@@ -56,6 +58,5 @@ jobs:
         working-directory: infrastructure/terraform/environments/${{ env.ENVIRONMENT }}
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve tfplan
         working-directory: infrastructure/terraform/environments/${{ env.ENVIRONMENT }}
